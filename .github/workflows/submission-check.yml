@@ -9,7 +9,6 @@ on:
 permissions:
   pull-requests: write
   contents: read
-  issues: write
 
 jobs:
   validate-submission:
@@ -133,56 +132,33 @@ jobs:
               console.log('✓ Status label already exists');
             }
 
-      - name: Post Success Comment
+      # Use Job Summary instead of public comments
+      # Results will appear in the PR Checks tab, not in the discussion
+      - name: Write Success Summary
         if: success()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-            
-            const comment = `## ✓ Submission Validation Passed
-            
-            Your submission has been validated successfully:
-            - ✓ One-active-submission rule check passed
-            - ✓ Image URLs validated
-            - ✓ Markdown format validated
-            
-            Your submission is now under review. Reviewers can claim review slots below.
-            
-            **Status:** Under Review
-            **Review Slots:** 0/3 filled`;
-            
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body: comment
-            });
+        run: |
+          echo "## ✓ Submission Validation Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Your submission has been validated successfully:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ One-active-submission rule check passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Image URLs validated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Markdown format validated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Your submission is now under review." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Under Review" >> $GITHUB_STEP_SUMMARY
 
-      - name: Post Failure Comment
+      - name: Write Failure Summary
         if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-            
-            const comment = `## ❌ Submission Validation Failed
-            
-            Your submission did not pass validation. Please check the workflow logs for details and fix the issues.
-            
-            Common issues:
-            - You may already have an active submission
-            - Image URLs may be invalid or from blacklisted domains
-            - Markdown format may be incorrect (missing frontmatter)
-            
-            Please update your PR and try again.`;
-            
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body: comment
-            });
+        run: |
+          echo "## ❌ Submission Validation Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Your submission did not pass validation. Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Common issues:" >> $GITHUB_STEP_SUMMARY
+          echo "- You may already have an active submission" >> $GITHUB_STEP_SUMMARY
+          echo "- Image URLs may be invalid or from blacklisted domains" >> $GITHUB_STEP_SUMMARY
+          echo "- Markdown format may be incorrect (missing frontmatter)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please update your PR and try again." >> $GITHUB_STEP_SUMMARY
 
