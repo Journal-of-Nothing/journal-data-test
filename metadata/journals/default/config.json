@@ -1,0 +1,17 @@
+{
+  "journalId": "default",
+  "name": "Journal of Nothing",
+  "description": "An open journal for experimental and unconventional research",
+  "settings": {
+    "defaultReviewSlots": 3,
+    "minReviewSlots": 1,
+    "maxReviewSlots": 5,
+    "reviewTimeoutDays": 14,
+    "allowPublicComments": true,
+    "requireReviewerTest": false,
+    "minimumReputationScore": 3.0
+  },
+  "editors": [],
+  "created": "2025-12-09T00:00:00Z",
+  "updated": "2025-12-09T00:00:00Z"
+}

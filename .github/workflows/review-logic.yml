@@ -1,0 +1,156 @@
+name: Review Logic
+
+on:
+  issue_comment:
+    types: [created]
+  schedule:
+    # Check for timed-out review slots daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      timeout-days:
+        description: 'Review timeout in days'
+        required: false
+        default: '14'
+
+permissions:
+  pull-requests: write
+  contents: write
+  issues: write
+
+jobs:
+  handle-review-action:
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Parse Comment Command
+        id: parse
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = context.payload.comment.body.trim();
+            const author = context.payload.comment.user.login;
+            
+            // Check for review slot claim command
+            if (comment === '/claim-review' || comment === '/claim') {
+              core.setOutput('action', 'claim');
+              core.setOutput('user', author);
+              return;
+            }
+            
+            // Check for review slot release command
+            if (comment === '/release-review' || comment === '/release') {
+              core.setOutput('action', 'release');
+              core.setOutput('user', author);
+              return;
+            }
+            
+            // Check for official review submission (detect marker)
+            if (comment.includes('<!-- OFFICIAL_REVIEW')) {
+              core.setOutput('action', 'submit-review');
+              core.setOutput('user', author);
+              return;
+            }
+            
+            core.setOutput('action', 'none');
+
+      - name: Get PR Details
+        if: steps.parse.outputs.action != 'none'
+        id: pr-details
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            // Extract submission ID from PR (could be in title or body)
+            // For MVP, we'll use PR number as submission ID
+            const submissionId = `sub_${context.issue.number}`;
+            core.setOutput('submission-id', submissionId);
+            core.setOutput('pr-number', context.issue.number);
+
+      - name: Claim Review Slot
+        if: steps.parse.outputs.action == 'claim'
+        run: |
+          SUBMISSION_ID="${{ steps.pr-details.outputs.submission-id }}"
+          USER="${{ steps.parse.outputs.user }}"
+          
+          node scripts/claim-review-slot.js "$SUBMISSION_ID" "$USER"
+
+      - name: Post Claim Success
+        if: steps.parse.outputs.action == 'claim' && success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✓ @${{ steps.parse.outputs.user }} successfully claimed a review slot!\n\nPlease submit your review within 14 days.`
+            });
+
+      - name: Post Claim Failure
+        if: steps.parse.outputs.action == 'claim' && failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `❌ Failed to claim review slot for @${{ steps.parse.outputs.user }}.\n\nPossible reasons:\n- All slots are already filled\n- You already claimed a slot\n- The submission is not in review status`
+            });
+
+  check-timeouts:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Check and Release Timed-out Slots
+        run: |
+          TIMEOUT_DAYS="${{ github.event.inputs.timeout-days || '14' }}"
+          node scripts/check-review-timeouts.js --timeout-days=$TIMEOUT_DAYS
+
+      - name: Commit Changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add metadata/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: release timed-out review slots"
+            git push
+          fi
+
+      - name: Notify on Failures
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.error('⚠️ Review timeout check failed! Please check manually.');
+            // In production, send email/notification to editors

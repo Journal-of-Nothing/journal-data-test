@@ -1,0 +1,21 @@
+{
+  "name": "journal-data-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "check-active-submission": "node scripts/check-active-submission.js",
+    "validate-images": "node scripts/validate-images.js",
+    "claim-review-slot": "node scripts/claim-review-slot.js",
+    "release-review-slot": "node scripts/release-review-slot.js",
+    "check-review-timeouts": "node scripts/check-review-timeouts.js",
+    "update-metadata": "node scripts/update-metadata.js",
+    "rebuild-indexes": "node scripts/rebuild-indexes.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "node": "^18.0.0"
+  }
+}

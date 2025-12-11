@@ -1,0 +1,16 @@
+{
+  "userId": "example-user",
+  "githubUsername": "example-user",
+  "email": "example@example.com",
+  "roles": {
+    "default": ["author"]
+  },
+  "activeSubmissionId": "sub_2025_12_001",
+  "submissionCount": 1,
+  "lastSubmissionTime": "2025-12-09T10:00:00Z",
+  "reviewCount": 0,
+  "reputationScore": 5.0,
+  "withdrawalHistory": [],
+  "createdAt": "2025-12-01T00:00:00Z",
+  "updatedAt": "2025-12-09T10:00:00Z"
+}

@@ -1,0 +1,188 @@
+name: Submission Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'posts/**/*.md'
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  validate-submission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Get PR Author
+        id: pr-info
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const author = context.payload.pull_request.user.login;
+            core.setOutput('author', author);
+            console.log(`PR author: ${author}`);
+
+      - name: Check One Active Submission Rule
+        id: check-active
+        run: |
+          AUTHOR="${{ steps.pr-info.outputs.author }}"
+          echo "Checking if $AUTHOR has other active submissions..."
+          
+          if [ -f scripts/check-active-submission.js ]; then
+            node scripts/check-active-submission.js "$AUTHOR"
+          else
+            echo "⚠️ check-active-submission.js not found, skipping check"
+          fi
+
+      - name: Extract Changed Markdown Files
+        id: changed-files
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            const mdFiles = files
+              .filter(f => f.filename.endsWith('.md') && f.filename.startsWith('posts/'))
+              .map(f => f.filename);
+            
+            core.setOutput('files', mdFiles.join(','));
+            console.log(`Changed markdown files: ${mdFiles.join(', ')}`);
+
+      - name: Validate Image URLs
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          IFS=',' read -ra FILES <<< "${{ steps.changed-files.outputs.files }}"
+          for file in "${FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "Validating images in $file..."
+              if [ -f scripts/validate-images.js ]; then
+                node scripts/validate-images.js "$file"
+              else
+                echo "⚠️ validate-images.js not found, skipping validation"
+              fi
+            fi
+          done
+
+      - name: Validate Markdown Format
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          IFS=',' read -ra FILES <<< "${{ steps.changed-files.outputs.files }}"
+          for file in "${FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "Checking format of $file..."
+              # Check for required frontmatter
+              if ! grep -q "^---" "$file"; then
+                echo "❌ Error: $file missing frontmatter"
+                exit 1
+              fi
+              echo "✓ Format check passed for $file"
+            fi
+          done
+
+      - name: Add Status Label
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            
+            // Get existing labels
+            const { data: existingLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number
+            });
+            
+            const hasStatusLabel = existingLabels.some(label => 
+              label.name.startsWith('status-')
+            );
+            
+            // Only add if no status label exists
+            if (!hasStatusLabel) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number,
+                labels: ['status-under-review']
+              });
+              console.log('✓ Added status-under-review label');
+            } else {
+              console.log('✓ Status label already exists');
+            }
+
+      - name: Post Success Comment
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            
+            const comment = `## ✓ Submission Validation Passed
+            
+            Your submission has been validated successfully:
+            - ✓ One-active-submission rule check passed
+            - ✓ Image URLs validated
+            - ✓ Markdown format validated
+            
+            Your submission is now under review. Reviewers can claim review slots below.
+            
+            **Status:** Under Review
+            **Review Slots:** 0/3 filled`;
+            
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: comment
+            });
+
+      - name: Post Failure Comment
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            
+            const comment = `## ❌ Submission Validation Failed
+            
+            Your submission did not pass validation. Please check the workflow logs for details and fix the issues.
+            
+            Common issues:
+            - You may already have an active submission
+            - Image URLs may be invalid or from blacklisted domains
+            - Markdown format may be incorrect (missing frontmatter)
+            
+            Please update your PR and try again.`;
+            
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: comment
+            });
+

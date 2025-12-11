@@ -1,0 +1,68 @@
+{
+  "id": "sub_2025_12_001",
+  "title": "A Novel Approach to Nothing: Exploring the Void",
+  "abstract": "This paper presents a groundbreaking investigation into the nature of nothing. Through rigorous theoretical analysis and experimental validation, we demonstrate that nothing is, paradoxically, something.",
+  "author": "Example User",
+  "authorGithubId": "example-user",
+  "status": "under-review",
+  "submittedAt": "2025-12-09T10:00:00Z",
+  "updatedAt": "2025-12-09T10:00:00Z",
+  "reviewSlots": {
+    "total": 3,
+    "filled": 1,
+    "reviewers": [
+      {
+        "userId": "reviewer-alice",
+        "claimedAt": "2025-12-09T11:30:00Z",
+        "status": "claimed"
+      }
+    ],
+    "history": [
+      {
+        "userId": "reviewer-alice",
+        "action": "claim",
+        "timestamp": "2025-12-09T11:30:00Z"
+      }
+    ]
+  },
+  "prNumber": 1,
+  "prUrl": "https://github.com/your-org/journal-data/pull/1",
+  "source": "frontend",
+  "journalId": "default",
+  "version": 1,
+  "timelines": [
+    {
+      "event": "submission_created",
+      "timestamp": "2025-12-09T10:00:00Z",
+      "actor": "example-user",
+      "details": {
+        "source": "frontend"
+      }
+    },
+    {
+      "event": "validation_passed",
+      "timestamp": "2025-12-09T10:01:00Z",
+      "actor": "system",
+      "details": {
+        "checks": ["one-active-submission", "image-validation", "format-check"]
+      }
+    },
+    {
+      "event": "status_changed",
+      "timestamp": "2025-12-09T10:01:00Z",
+      "actor": "system",
+      "details": {
+        "from": null,
+        "to": "under-review"
+      }
+    },
+    {
+      "event": "review_slot_claimed",
+      "timestamp": "2025-12-09T11:30:00Z",
+      "actor": "reviewer-alice",
+      "details": {
+        "slotNumber": 1
+      }
+    }
+  ]
+}

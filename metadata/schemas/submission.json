@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "abstract": { "type": "string" },
+    "author": { "type": "string" },
+    "authorGithubId": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["under-review", "accepted", "rejected", "pending-revision", "withdrawn"]
+    },
+    "submittedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "reviewSlots": {
+      "type": "object",
+      "properties": {
+        "total": { "type": "integer", "default": 3 },
+        "filled": { "type": "integer", "default": 0 },
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "claimedAt": { "type": "string", "format": "date-time" },
+              "submittedAt": { "type": "string", "format": "date-time" },
+              "status": { 
+                "type": "string",
+                "enum": ["claimed", "submitted", "expired"]
+              }
+            }
+          }
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "action": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      }
+    },
+    "prNumber": { "type": "integer" },
+    "prUrl": { "type": "string" },
+    "source": {
+      "type": "string",
+      "enum": ["frontend", "direct-pr"],
+      "default": "frontend"
+    },
+    "journalId": { "type": "string", "default": "default" },
+    "version": { "type": "integer", "default": 1 },
+    "timelines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "event": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "actor": { "type": "string" },
+          "details": { "type": "object" }
+        }
+      }
+    }
+  },
+  "required": ["id", "title", "author", "authorGithubId", "status", "submittedAt", "prNumber"]
+}

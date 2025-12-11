@@ -1,0 +1,147 @@
+name: Publish
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  publish-accepted:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Check PR Labels
+        id: check-labels
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const isAccepted = labels.includes('status-accepted');
+            const isErrata = labels.includes('errata');
+            
+            core.setOutput('is-accepted', isAccepted);
+            core.setOutput('is-errata', isErrata);
+            
+            console.log(`Labels: ${labels.join(', ')}`);
+            console.log(`Accepted: ${isAccepted}, Errata: ${isErrata}`);
+
+      - name: Update Metadata Indexes
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        run: |
+          echo "Updating metadata indexes for accepted submission..."
+          # This would run the index rebuild script
+          if [ -f scripts/rebuild-indexes.js ]; then
+            node scripts/rebuild-indexes.js
+          fi
+
+      - name: Update User Records
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const author = context.payload.pull_request.user.login;
+            const prNumber = context.payload.pull_request.number;
+            
+            console.log(`Updating user record for ${author}`);
+            console.log(`Published article from PR #${prNumber}`);
+            
+            // In production: update user's activeSubmissionId to null
+            // and increment publication count
+
+      - name: Tag Version
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          ARTICLE_ID="article_${PR_NUMBER}_v1"
+          
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git tag -a "$ARTICLE_ID" -m "Published article from PR #${PR_NUMBER}"
+          git push origin "$ARTICLE_ID"
+          
+          echo "✓ Tagged as $ARTICLE_ID"
+
+      - name: Trigger Site Build
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Trigger the journal-site repository build
+            // This would dispatch a workflow in the site repo
+            console.log('Triggering site rebuild...');
+            
+            // In production:
+            // await github.rest.repos.createDispatchEvent({
+            //   owner: 'your-org',
+            //   repo: 'journal-site',
+            //   event_type: 'content-updated'
+            // });
+
+      - name: Migrate Comments to Discussions
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log('In production: migrate PR comments to Discussions');
+            // This would:
+            // 1. Create a new Discussion for the article
+            // 2. Copy all comments (preserving official review markers)
+            // 3. Close the PR with a link to the Discussion
+
+      - name: Post Publication Notice
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            
+            const comment = `## 🎉 Article Published!
+            
+            This submission has been accepted and published.
+            
+            **Next Steps:**
+            - The article is now live on the journal website
+            - All reviews and discussions have been migrated to Discussions
+            - You can submit a new manuscript
+            
+            Thank you for your contribution!`;
+            
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: comment
+            });
+
+      - name: Commit Metadata Changes
+        if: steps.check-labels.outputs.is-accepted == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add metadata/
+          if git diff --staged --quiet; then
+            echo "No metadata changes to commit"
+          else
+            git commit -m "chore: update metadata for published article"
+            git push
+          fi
