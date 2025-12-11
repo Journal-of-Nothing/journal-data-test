@@ -16,11 +16,19 @@
   "prUrl": "https://github.com/Journal-of-Nothing/journal-data-test/pull/2",
   "branchName": "submit/sub_2025_12_IW9",
   "createdAt": "2025-12-11T11:59:13.012Z",
-  "updatedAt": "2025-12-11T13:22:43.160Z",
+  "updatedAt": "2025-12-11T13:23:06.595Z",
   "version": 1,
   "reviewSlots": {
     "total": 3,
-    "reviewers": []
+    "reviewers": [
+      {
+        "userId": "user_845541909gan-gif",
+        "githubUsername": "845541909gan-gif",
+        "status": "pending",
+        "claimedAt": "2025-12-11T13:23:06.594Z",
+        "deadlineAt": "2025-12-25T13:23:06.595Z"
+      }
+    ]
   },
   "timeline": [
     {
@@ -42,6 +50,13 @@
       "type": "commented",
       "message": "845541909gan-gif 发表评论",
       "at": "2025-12-11T13:22:41.925Z",
+      "actor": "845541909gan-gif"
+    },
+    {
+      "id": "t_1765459386595_vva8",
+      "type": "review-claimed",
+      "message": "845541909gan-gif 占用审稿坑位",
+      "at": "2025-12-11T13:23:06.594Z",
       "actor": "845541909gan-gif"
     }
   ]
