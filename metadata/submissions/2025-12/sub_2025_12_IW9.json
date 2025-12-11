@@ -16,7 +16,7 @@
   "prUrl": "https://github.com/Journal-of-Nothing/journal-data-test/pull/2",
   "branchName": "submit/sub_2025_12_IW9",
   "createdAt": "2025-12-11T11:59:13.012Z",
-  "updatedAt": "2025-12-11T12:00:15.450Z",
+  "updatedAt": "2025-12-11T13:22:43.160Z",
   "version": 1,
   "reviewSlots": {
     "total": 3,
@@ -36,6 +36,13 @@
       "message": "Riceneeder 发表评论",
       "at": "2025-12-11T12:00:14.118Z",
       "actor": "Riceneeder"
+    },
+    {
+      "id": "t_1765459361924_qsbf",
+      "type": "commented",
+      "message": "845541909gan-gif 发表评论",
+      "at": "2025-12-11T13:22:41.925Z",
+      "actor": "845541909gan-gif"
     }
   ]
 }
