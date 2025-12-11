@@ -1,0 +1,34 @@
+{
+  "id": "sub_2025_12_S9C",
+  "title": "另一投稿测试",
+  "abstract": "另一投稿测试摘要",
+  "keywords": [
+    "另一投稿测试关键词"
+  ],
+  "articleType": "Research Articles",
+  "journalId": "default",
+  "authorId": "user_845541909gan-gif",
+  "authorGithubUsername": "845541909gan-gif",
+  "authorDisplayName": "845541909gan-gif",
+  "authorAvatarUrl": "https://avatars.githubusercontent.com/u/249113352?v=4",
+  "status": "under-review",
+  "prNumber": 3,
+  "prUrl": "https://github.com/Journal-of-Nothing/journal-data-test/pull/3",
+  "branchName": "submit/sub_2025_12_S9C",
+  "createdAt": "2025-12-11T13:42:35.430Z",
+  "updatedAt": "2025-12-11T13:42:35.430Z",
+  "version": 1,
+  "reviewSlots": {
+    "total": 3,
+    "reviewers": []
+  },
+  "timeline": [
+    {
+      "id": "t_1765460562729_x4sf",
+      "type": "submitted",
+      "message": "提交稿件",
+      "at": "2025-12-11T13:42:35.430Z",
+      "actor": "845541909gan-gif"
+    }
+  ]
+}
