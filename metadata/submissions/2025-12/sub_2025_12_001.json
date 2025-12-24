@@ -6,15 +6,16 @@
   "authorGithubId": "example-user",
   "status": "under-review",
   "submittedAt": "2025-12-09T10:00:00Z",
-  "updatedAt": "2025-12-09T10:00:00Z",
+  "updatedAt": "2025-12-24T01:26:54.416Z",
   "reviewSlots": {
     "total": 3,
-    "filled": 1,
+    "filled": 0,
     "reviewers": [
       {
         "userId": "reviewer-alice",
         "claimedAt": "2025-12-09T11:30:00Z",
-        "status": "claimed"
+        "status": "expired",
+        "expiredAt": "2025-12-24T01:26:54.416Z"
       }
     ],
     "history": [
@@ -22,6 +23,11 @@
         "userId": "reviewer-alice",
         "action": "claim",
         "timestamp": "2025-12-09T11:30:00Z"
+      },
+      {
+        "userId": "reviewer-alice",
+        "action": "timeout_release",
+        "timestamp": "2025-12-24T01:26:54.416Z"
       }
     ]
   },
@@ -44,7 +50,11 @@
       "timestamp": "2025-12-09T10:01:00Z",
       "actor": "system",
       "details": {
-        "checks": ["one-active-submission", "image-validation", "format-check"]
+        "checks": [
+          "one-active-submission",
+          "image-validation",
+          "format-check"
+        ]
       }
     },
     {
@@ -62,6 +72,16 @@
       "actor": "reviewer-alice",
       "details": {
         "slotNumber": 1
+      }
+    },
+    {
+      "event": "review_slot_timeout",
+      "timestamp": "2025-12-24T01:26:54.416Z",
+      "actor": "system",
+      "details": {
+        "reviewer": "reviewer-alice",
+        "claimedAt": "2025-12-09T11:30:00Z",
+        "daysElapsed": 14
       }
     }
   ]
